@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { fetchClientById } from '@/lib/clients';
@@ -19,7 +19,15 @@ interface OrderItem {
   commission_value: number;
 }
 
-export default function NewOrderPage() {
+export default function PageWrapper() {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <NewOrderPage />
+    </Suspense>
+  );
+}
+
+function NewOrderPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const clientId = searchParams.get('cliente');
