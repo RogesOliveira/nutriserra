@@ -24,13 +24,24 @@ export function Sidebar({
   isExpanded,
   setIsExpanded,
 }: SidebarProps) {
-  // Always keep the sidebar expanded
-  if (!isExpanded) {
-    setIsExpanded(true);
-  }
-  
   // Estado para controlar quando a rolagem deve ocorrer
   const [shouldScroll, setShouldScroll] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  
+  // Indicar quando estamos no cliente para evitar problemas de hidratação
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  
+  // Ensure sidebar is always expanded, but only on client-side
+  useEffect(() => {
+    if (isClient && !isExpanded) {
+      // Use setTimeout para garantir que isso ocorra após a hidratação completa
+      setTimeout(() => {
+        setIsExpanded(true);
+      }, 10);
+    }
+  }, [isClient, isExpanded, setIsExpanded]);
   
   // Função para rolagem suave
   const scrollToContent = () => {
@@ -42,14 +53,14 @@ export function Sidebar({
 
   // Efeito para lidar com a rolagem após as mudanças de estado
   useEffect(() => {
-    if (shouldScroll) {
+    if (shouldScroll && isClient) {
       // Espera um pouco para permitir que a renderização aconteça
       setTimeout(() => {
         scrollToContent();
         setShouldScroll(false);
       }, 50);
     }
-  }, [shouldScroll]);
+  }, [shouldScroll, isClient]);
 
   const handleAnimalClick = (animal: AnimalType | "all") => {
     if (selectedAnimal === animal) {
@@ -396,7 +407,7 @@ export function Sidebar({
   };
 
   return (
-    <div className="h-full bg-darkGreen2 transition-all duration-300 pb-5 w-64">
+    <div className="h-full bg-darkGreen2 transition-all duration-300 pb-5 w-full overflow-hidden">
       <div className="p-2 pt-6">
         <div className="space-y-3">
           <div>

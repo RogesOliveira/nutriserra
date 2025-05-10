@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Package, Search, Filter, Clock, Edit, Check, X } from "lucide-react"
+import { Package, Search, Filter, Clock, Edit, Check, X, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Order } from "@/lib/orders"
@@ -28,6 +28,8 @@ export default function PedidosPage() {
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null)
   const [selectedStatus, setSelectedStatus] = useState<string>("")
   const [isUpdating, setIsUpdating] = useState(false)
+  const [sortOption, setSortOption] = useState<string>("date_desc")
+  const [showSortDropdown, setShowSortDropdown] = useState(false)
   
   // Carregar pedidos do banco de dados
   useEffect(() => {
@@ -96,6 +98,71 @@ export default function PedidosPage() {
     
     setFilteredOrders(filtered)
   }, [searchTerm, orders, clientsData])
+
+  // Função de ordenação
+  useEffect(() => {
+    let sorted = [...filteredOrders]
+    switch (sortOption) {
+      case "date_asc":
+        sorted.sort((a, b) => new Date(a.order_date).getTime() - new Date(b.order_date).getTime())
+        break
+      case "date_desc":
+        sorted.sort((a, b) => new Date(b.order_date).getTime() - new Date(a.order_date).getTime())
+        break
+      case "value_asc":
+        sorted.sort((a, b) => (a.total_amount || 0) - (b.total_amount || 0))
+        break
+      case "value_desc":
+        sorted.sort((a, b) => (b.total_amount || 0) - (a.total_amount || 0))
+        break
+      case "commission_asc":
+        sorted.sort((a, b) => {
+          const aCom = a.items?.reduce((sum, item) => {
+            if (item.commission_type === 'percentage') {
+              return sum + ((item.quantity * (item.sack_weight || 0) * item.unit_price) * (item.commission_value || 0) / 100)
+            } else if (item.commission_type === 'fixed') {
+              return sum + (item.commission_value || 0)
+            }
+            return sum
+          }, 0) || 0
+          const bCom = b.items?.reduce((sum, item) => {
+            if (item.commission_type === 'percentage') {
+              return sum + ((item.quantity * (item.sack_weight || 0) * item.unit_price) * (item.commission_value || 0) / 100)
+            } else if (item.commission_type === 'fixed') {
+              return sum + (item.commission_value || 0)
+            }
+            return sum
+          }, 0) || 0
+          return aCom - bCom
+        })
+        break
+      case "commission_desc":
+        sorted.sort((a, b) => {
+          const aCom = a.items?.reduce((sum, item) => {
+            if (item.commission_type === 'percentage') {
+              return sum + ((item.quantity * (item.sack_weight || 0) * item.unit_price) * (item.commission_value || 0) / 100)
+            } else if (item.commission_type === 'fixed') {
+              return sum + (item.commission_value || 0)
+            }
+            return sum
+          }, 0) || 0
+          const bCom = b.items?.reduce((sum, item) => {
+            if (item.commission_type === 'percentage') {
+              return sum + ((item.quantity * (item.sack_weight || 0) * item.unit_price) * (item.commission_value || 0) / 100)
+            } else if (item.commission_type === 'fixed') {
+              return sum + (item.commission_value || 0)
+            }
+            return sum
+          }, 0) || 0
+          return bCom - aCom
+        })
+        break
+      default:
+        break
+    }
+    setFilteredOrders(sorted)
+    // eslint-disable-next-line
+  }, [sortOption])
 
   function formatStatus(status: string) {
     switch (status) {
@@ -201,10 +268,6 @@ export default function PedidosPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-darkGreen">Pedidos</h1>
-        <Button variant="outline" className="flex items-center">
-          <Clock className="h-4 w-4 mr-2" />
-          Histórico
-        </Button>
       </div>
       
       {/* Stats Cards - Moved to top */}
@@ -267,11 +330,27 @@ export default function PedidosPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          
-          <Button variant="outline" className="flex items-center">
-            <Filter className="h-4 w-4 mr-2" />
-            Filtrar
-          </Button>
+          <div className="relative">
+            <Button
+              variant="outline"
+              className="flex items-center"
+              onClick={() => setShowSortDropdown((v) => !v)}
+              type="button"
+            >
+              <ChevronDown className="h-4 w-4 mr-2" />
+              Organizar por...
+            </Button>
+            {showSortDropdown && (
+              <div className="absolute right-0 mt-2 w-56 bg-white border rounded shadow z-50">
+                <button className={`block w-full text-left px-4 py-2 hover:bg-cream/50 ${sortOption === 'date_desc' ? 'font-bold' : ''}`} onClick={() => { setSortOption('date_desc'); setShowSortDropdown(false); }}>Data (mais recente)</button>
+                <button className={`block w-full text-left px-4 py-2 hover:bg-cream/50 ${sortOption === 'date_asc' ? 'font-bold' : ''}`} onClick={() => { setSortOption('date_asc'); setShowSortDropdown(false); }}>Data (mais antiga)</button>
+                <button className={`block w-full text-left px-4 py-2 hover:bg-cream/50 ${sortOption === 'value_desc' ? 'font-bold' : ''}`} onClick={() => { setSortOption('value_desc'); setShowSortDropdown(false); }}>Valor (maior)</button>
+                <button className={`block w-full text-left px-4 py-2 hover:bg-cream/50 ${sortOption === 'value_asc' ? 'font-bold' : ''}`} onClick={() => { setSortOption('value_asc'); setShowSortDropdown(false); }}>Valor (menor)</button>
+                <button className={`block w-full text-left px-4 py-2 hover:bg-cream/50 ${sortOption === 'commission_desc' ? 'font-bold' : ''}`} onClick={() => { setSortOption('commission_desc'); setShowSortDropdown(false); }}>Comissão (maior)</button>
+                <button className={`block w-full text-left px-4 py-2 hover:bg-cream/50 ${sortOption === 'commission_asc' ? 'font-bold' : ''}`} onClick={() => { setSortOption('commission_asc'); setShowSortDropdown(false); }}>Comissão (menor)</button>
+              </div>
+            )}
+          </div>
         </div>
         
         {/* Tabela de pedidos */}

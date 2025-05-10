@@ -28,96 +28,125 @@ export function ProductGrid({
   
   // Helper function to parse animal types from a string or array
   const parseAnimalTypes = (animalType: any): AnimalType[] => {
-    // Handle string representation of JSON array from Supabase
-    if (typeof animalType === 'string') {
-      try {
-        // Check if it looks like a JSON string array
-        if (animalType.startsWith('[') && animalType.endsWith(']')) {
-          const parsed = JSON.parse(animalType);
-          if (Array.isArray(parsed)) {
-            return parsed;
-          }
-        }
-        // If it's a single string value but not array-like
-        return [animalType as AnimalType];
-      } catch (error) {
-        console.error("Error parsing animalType:", error);
-        return [animalType as AnimalType];
+    try {
+      // Handle null or undefined
+      if (!animalType) {
+        return [];
       }
+
+      // Handle string representation of JSON array from Supabase
+      if (typeof animalType === 'string') {
+        try {
+          // Check if it looks like a JSON string array
+          if (animalType.startsWith('[') && animalType.endsWith(']')) {
+            const parsed = JSON.parse(animalType);
+            if (Array.isArray(parsed)) {
+              return parsed;
+            }
+          }
+          // If it's a single string value but not array-like
+          return [animalType as AnimalType];
+        } catch (error) {
+          console.error("Error parsing animalType string:", error);
+          return [animalType as AnimalType];
+        }
+      }
+      
+      // Handle proper array
+      if (Array.isArray(animalType)) {
+        return animalType;
+      }
+      
+      // Handle single value
+      return [animalType];
+    } catch (error) {
+      console.error("Error in parseAnimalTypes:", error);
+      return [];
     }
-    
-    // Handle proper array
-    if (Array.isArray(animalType)) {
-      return animalType;
-    }
-    
-    // Handle single value
-    return [animalType];
   }
   
   // Helper function to parse subtypes from a string or array
   const parseSubTypes = (subType: any): AnimalSubType[] => {
-    if (!subType) return [];
-    
-    // Handle string representation of JSON array from Supabase
-    if (typeof subType === 'string') {
-      try {
-        // Check if it looks like a JSON string array
-        if (subType.startsWith('[') && subType.endsWith(']')) {
-          const parsed = JSON.parse(subType);
-          if (Array.isArray(parsed)) {
-            return parsed;
-          }
-        }
-        // If it's a single string value but not array-like
-        return [subType as AnimalSubType];
-      } catch (error) {
-        console.error("Error parsing subType:", error);
-        return [subType as AnimalSubType];
+    try {
+      // Handle null or undefined
+      if (!subType) {
+        return [];
       }
+
+      // Handle string representation of JSON array from Supabase
+      if (typeof subType === 'string') {
+        try {
+          // Check if it looks like a JSON string array
+          if (subType.startsWith('[') && subType.endsWith(']')) {
+            const parsed = JSON.parse(subType);
+            if (Array.isArray(parsed)) {
+              return parsed;
+            }
+          }
+          // If it's a single string value but not array-like
+          return [subType as AnimalSubType];
+        } catch (error) {
+          console.error("Error parsing subType string:", error);
+          return [subType as AnimalSubType];
+        }
+      }
+      
+      // Handle proper array
+      if (Array.isArray(subType)) {
+        return subType;
+      }
+      
+      // Handle single value
+      return [subType];
+    } catch (error) {
+      console.error("Error in parseSubTypes:", error);
+      return [];
     }
-    
-    // Handle proper array
-    if (Array.isArray(subType)) {
-      return subType;
-    }
-    
-    // Handle single value
-    return [subType];
   }
   
   // Aplicar filtro de pesquisa
   const filteredProducts = searchTerm 
     ? products.filter(product => {
-        const searchTermLower = searchTerm.toLowerCase();
-        
-        // Search in name and description
-        if (product.name.toLowerCase().includes(searchTermLower) || 
-            product.description.toLowerCase().includes(searchTermLower)) {
-          return true;
-        }
-        
-        // Search in animal types (could be string or array)
-        const animalTypes = parseAnimalTypes(product.animalType);
-        for (const type of animalTypes) {
-          const typeInPortuguese = getAnimalTypeInPortuguese(type);
-          if (typeInPortuguese.toLowerCase().includes(searchTermLower)) {
+        try {
+          const searchTermLower = searchTerm.toLowerCase();
+          
+          // Search in name and description
+          if (product.name?.toLowerCase().includes(searchTermLower) || 
+              product.description?.toLowerCase().includes(searchTermLower)) {
             return true;
           }
-        }
-        
-        // Search in subtypes (could be string, array or null)
-        if (product.subType) {
-          const subTypes = parseSubTypes(product.subType);
-          for (const subType of subTypes) {
-            const subTypeInPortuguese = getSubTypeInPortuguese(subType);
-            if (subTypeInPortuguese.toLowerCase().includes(searchTermLower)) {
-              return true;
+          
+          // Search in animal types (could be string or array)
+          if (product.animalType) {
+            const animalTypes = parseAnimalTypes(product.animalType);
+            for (const type of animalTypes) {
+              if (type) {
+                const typeInPortuguese = getAnimalTypeInPortuguese(type);
+                if (typeInPortuguese?.toLowerCase().includes(searchTermLower)) {
+                  return true;
+                }
+              }
             }
           }
+          
+          // Search in subtypes (could be string, array or null)
+          if (product.subType) {
+            const subTypes = parseSubTypes(product.subType);
+            for (const subType of subTypes) {
+              if (subType) {
+                const subTypeInPortuguese = getSubTypeInPortuguese(subType);
+                if (subTypeInPortuguese?.toLowerCase().includes(searchTermLower)) {
+                  return true;
+                }
+              }
+            }
+          }
+          
+          return false;
+        } catch (error) {
+          console.error("Error filtering product:", error);
+          return false;
         }
-        
-        return false;
       })
     : products
 

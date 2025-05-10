@@ -17,8 +17,9 @@ export function Marketplace() {
   const [selectedAnimal, setSelectedAnimal] = useState<AnimalType | "all">("all")
   const [selectedSubType, setSelectedSubType] = useState<AnimalSubType | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
-  const [sidebarExpanded, setSidebarExpanded] = useState(false)
+  const [sidebarExpanded, setSidebarExpanded] = useState(true) // Iniciar como true para evitar transições durante hidratação
   const [isScrolled, setIsScrolled] = useState(false)
+  const [isMounted, setIsMounted] = useState(false) // Estado para controlar hidratação
 
   const productsRef = useRef<HTMLDivElement>(null)
 
@@ -81,6 +82,11 @@ export function Marketplace() {
     // Handle single value
     return [subType];
   }
+
+  // Marcar quando o componente for montado para prevenir problemas de hidratação
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Detectar quando a página é rolada para ajustar a posição da sidebar
   useEffect(() => {
@@ -151,40 +157,47 @@ export function Marketplace() {
         setSelectedAnimal={setSelectedAnimal} 
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
+        products={allProducts}
       />
 
+      {/* Hero em largura total, sem grid */}
       <Hero />
+      
+      {/* Apenas a seção de produtos usa o grid com a sidebar */}
+      <div ref={productsRef} className="w-full">
+        <div className="grid lg:grid-cols-[16rem_1fr] w-full relative">
+          {/* Sidebar fixa apenas na seção de produtos */}
+          <div className={`hidden lg:block sticky z-40 transition-all duration-300 ${
+            isScrolled ? "top-[56px]" : "top-[72px]"
+          } h-[calc(100vh-52px)]`}>
+            <Sidebar
+              selectedAnimal={selectedAnimal}
+              setSelectedAnimal={setSelectedAnimal}
+              selectedSubType={selectedSubType}
+              setSelectedSubType={setSelectedSubType}
+              isExpanded={sidebarExpanded}
+              setIsExpanded={setSidebarExpanded}
+            />
+          </div>
 
-      <div ref={productsRef} className="flex flex-1">
-        <div className={`hidden lg:block sticky transition-all duration-300 ${
-          isScrolled ? "top-[56px]" : "top-[72px]"
-        } h-[calc(100vh-52px)] ${
-          sidebarExpanded ? "w-64" : "w-12"
-        }`}>
-          <Sidebar
-            selectedAnimal={selectedAnimal}
-            setSelectedAnimal={setSelectedAnimal}
-            selectedSubType={selectedSubType}
-            setSelectedSubType={setSelectedSubType}
-            isExpanded={sidebarExpanded}
-            setIsExpanded={setSidebarExpanded}
-          />
-        </div>
-
-        <div className="flex-1">
-          <ProductGrid
-            products={filteredProducts}
-            selectedAnimal={selectedAnimal}
-            setSelectedAnimal={setSelectedAnimal}
-            selectedSubType={selectedSubType}
-            setSelectedSubType={setSelectedSubType}
-            isLoading={isLoading}
-            searchTerm={searchTerm}
-          />
+          {/* Conteúdo de produtos */}
+          <div className="lg:col-start-2 w-full">
+            <div className="flex-1">
+              <ProductGrid
+                products={filteredProducts}
+                selectedAnimal={selectedAnimal}
+                setSelectedAnimal={setSelectedAnimal}
+                selectedSubType={selectedSubType}
+                setSelectedSubType={setSelectedSubType}
+                isLoading={isLoading}
+                searchTerm={searchTerm}
+              />
+            </div>
+          </div>
         </div>
       </div>
       
-      {/* Clients Section */}
+      {/* Clients Section em largura total, sem grid */}
       <ClientsSection />
 
       <footer className="bg-darkGreen text-cream py-8">

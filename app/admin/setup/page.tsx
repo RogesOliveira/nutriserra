@@ -197,22 +197,6 @@ CREATE INDEX IF NOT EXISTS idx_products_sub_type ON public.products(sub_type);`
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-darkGreen">Configurações</h1>
-        <div className="flex space-x-2 bg-cream rounded-lg p-1">
-          <Button 
-            variant={activeTab === "products" ? "default" : "ghost"} 
-            onClick={() => setActiveTab("products")}
-            className={activeTab === "products" ? "bg-darkGreen text-cream" : "text-darkGreen"}
-          >
-            Produtos
-          </Button>
-          <Button 
-            variant={activeTab === "database" ? "default" : "ghost"} 
-            onClick={() => setActiveTab("database")}
-            className={activeTab === "database" ? "bg-darkGreen text-cream" : "text-darkGreen"}
-          >
-            Banco de Dados
-          </Button>
-        </div>
       </div>
 
       {activeTab === "products" ? (

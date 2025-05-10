@@ -2,6 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'JUST Sans Regular';
+  src: local('JUST Sans Regular');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'JUST Sans ExBold Extranegrito';
+  src: local('JUST Sans ExBold Extranegrito');
+  font-weight: bold;
+  font-style: normal;
+}
+
+body {
+  font-family: 'JUST Sans Regular', Arial, Helvetica, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6, strong, .font-bold {
+  font-family: 'JUST Sans ExBold Extranegrito', Arial, Helvetica, sans-serif;
+}
+
 :root {
   --darkGreen: #0a1c0e;
   --darkGreen2: #18311e;
@@ -121,8 +143,71 @@ body {
   }
   body {
     @apply bg-background text-foreground;
-    color: #0a1c0e;
-    background-color: #f5f0de;
+  }
+}
+
+/* Destaque para o produto quando clicado via dropdown de pesquisa */
+.highlight-product {
+  animation: highlight-pulse 2s ease-in-out;
+  position: relative;
+  z-index: 10;
+  outline: none;
+}
+
+@keyframes highlight-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(108, 159, 54, 0);
+    transform: scale(1);
+  }
+  25% {
+    box-shadow: 0 0 20px 10px rgba(108, 159, 54, 0.7);
+    transform: scale(1.04);
+  }
+  50% {
+    box-shadow: 0 0 15px 7px rgba(108, 159, 54, 0.5);
+    transform: scale(1.02);
+  }
+  75% {
+    box-shadow: 0 0 20px 10px rgba(108, 159, 54, 0.7);
+    transform: scale(1.04);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(108, 159, 54, 0);
+    transform: scale(1);
+  }
+}
+
+/* Animação para o botão de comprar no dropdown */
+@keyframes slide-in-left {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.group:hover .group-hover\:opacity-100 {
+  animation: slide-in-left 0.3s ease-out;
+}
+
+/* Regras para garantir o posicionamento correto da sidebar */
+@media (min-width: 1024px) {
+  /* Previne que ocorra sobreposição durante a hidratação/atualização */
+  body {
+    overflow-x: hidden;
+  }
+  
+  /* Garante que a sidebar seja renderizada com prioridade */
+  .grid {
+    grid-template-columns: minmax(16rem, auto) 1fr;
+  }
+  
+  /* Garante que a sidebar tenha um z-index correto */
+  .sticky {
+    isolation: isolate;
   }
 }
 

@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Leaf, Phone, Search, X } from "lucide-react"
-import type { AnimalType } from "@/types"
+import { Leaf, Phone, Search, ShoppingCart, Tag, X } from "lucide-react"
+import type { AnimalType, Product } from "@/types"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Input } from "@/components/ui/input"
@@ -13,12 +13,16 @@ interface HeaderProps {
   setSelectedAnimal: (animal: AnimalType | "all") => void
   searchTerm: string
   setSearchTerm: (term: string) => void
+  products?: Product[]
 }
 
-export function Header({ selectedAnimal, setSelectedAnimal, searchTerm, setSearchTerm }: HeaderProps) {
+export function Header({ selectedAnimal, setSelectedAnimal, searchTerm, setSearchTerm, products = [] }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const [isMobile, setIsMobile] = useState(false)
+  const [searchResults, setSearchResults] = useState<Product[]>([])
+  const [showDropdown, setShowDropdown] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -52,10 +56,131 @@ export function Header({ selectedAnimal, setSelectedAnimal, searchTerm, setSearc
     }
   }, [])
 
+  useEffect(() => {
+    // Filtrar produtos com base no termo de pesquisa
+    if (searchTerm.trim() && products.length > 0) {
+      const filtered = products
+        .filter(product => 
+          product.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+          product.description.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        .slice(0, 3); // Limitar a 3 resultados
+      
+      setSearchResults(filtered);
+      setShowDropdown(filtered.length > 0);
+    } else {
+      setSearchResults([]);
+      setShowDropdown(false);
+    }
+  }, [searchTerm, products]);
+
+  useEffect(() => {
+    // Fechar dropdown quando clicar fora dele
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleSearchClear = () => {
     setSearchTerm("")
+    setShowDropdown(false)
     if (searchInputRef.current) {
       searchInputRef.current.focus() // Manter o foco após limpar
+    }
+  }
+
+  const handleProductClick = (productId: string) => {
+    // Fechar o dropdown
+    setShowDropdown(false);
+    
+    // Rolagem até o produto
+    const productElement = document.getElementById(`product-${productId}`);
+    if (productElement) {
+      productElement.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'center'
+      });
+      
+      // Destacar temporariamente o produto
+      productElement.classList.add('highlight-product');
+      setTimeout(() => {
+        productElement.classList.remove('highlight-product');
+      }, 2000);
+    }
+  };
+
+  const handleWhatsAppClick = (product: Product, e: React.MouseEvent) => {
+    e.stopPropagation(); // Evita que o clique também acione o handleProductClick
+    const whatsappNumber = "5551999559189";
+    const message = `Olá, tenho interesse em "${product.name}" - preço R$${(product.pricePerSack / product.sackWeight).toFixed(2)}/kg e saca de R$${product.pricePerSack.toFixed(2)}`;
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  // Helper para obter array de tipos de animais
+  const getAnimalTypes = (product: Product): AnimalType[] => {
+    // Handle string representation of JSON array from Supabase
+    if (typeof product.animalType === 'string') {
+      try {
+        // Check if it looks like a JSON string array
+        if (product.animalType.startsWith('[') && product.animalType.endsWith(']')) {
+          const parsed = JSON.parse(product.animalType);
+          if (Array.isArray(parsed)) {
+            return parsed;
+          }
+        }
+        // If it's a single string value but not array-like
+        return [product.animalType as AnimalType];
+      } catch (error) {
+        console.error("Error parsing animalType:", error);
+        return [product.animalType as AnimalType];
+      }
+    }
+    
+    // Handle proper array
+    if (Array.isArray(product.animalType)) {
+      return product.animalType;
+    }
+    
+    // Handle single value
+    return [product.animalType];
+  }
+
+  // Helper para obter nome do animal em português
+  const getAnimalTypeInPortuguese = (animalType: string): string => {
+    switch (animalType) {
+      case "cattle": return "Bovinos"
+      case "poultry": return "Aves"
+      case "swine": return "Suínos"
+      case "sheep": return "Ovinos"
+      case "rabbit": return "Coelhos"
+      case "fish": return "Peixes"
+      case "shrimp": return "Camarão"
+      case "goat": return "Caprinos"
+      case "horse": return "Equinos"
+      default: return animalType
+    }
+  }
+
+  // Helper para obter caminho da imagem do animal
+  const getAnimalTypeImagePath = (animalType: string): string => {
+    switch (animalType) {
+      case "cattle": return "/images/vaca.jpg"
+      case "poultry": return "/images/aves.jpg"
+      case "swine": return "/images/suinos.jpg"
+      case "sheep": return "/images/ovinos.jpg"
+      case "rabbit": return "/images/coelho.jpg"
+      case "fish": return "/images/peixe.jpg"
+      case "shrimp": return "/images/camarao.jpg"
+      case "goat": return "/images/caprino.jpg"
+      case "horse": return "/images/equino.jpg"
+      default: return "/images/hero-background.jpg"
     }
   }
 
@@ -97,6 +222,89 @@ export function Header({ selectedAnimal, setSelectedAnimal, searchTerm, setSearc
                 >
                   <X className="h-2.5 w-2.5 md:h-4 md:w-4" />
                 </Button>
+              )}
+              
+              {/* Dropdown para resultados da pesquisa */}
+              {showDropdown && (
+                <div 
+                  ref={dropdownRef}
+                  className="absolute top-full left-0 right-0 mt-3 bg-white rounded-xl shadow-lg overflow-hidden z-50 w-[130%] -ml-[15%]"
+                >
+                  <div className="divide-y-0">
+                    {searchResults.map((product, index) => (
+                      <div 
+                        key={product.id}
+                        className={`flex items-stretch hover:bg-gray-100 cursor-pointer min-h-[80px] group relative ${
+                          index === 0 ? 'rounded-t-xl' : ''
+                        } ${
+                          index === searchResults.length - 1 ? 'rounded-b-xl' : ''
+                        }`}
+                        onClick={() => handleProductClick(product.id)}
+                      >
+                        <div className="w-[80px] min-w-[80px] h-auto relative overflow-hidden">
+                          <Image
+                            src={product.image}
+                            alt={product.name}
+                            fill
+                            className="object-cover h-full"
+                          />
+                        </div>
+                        
+                        {/* Botão de comprar que aparece ao passar o mouse */}
+                        <div 
+                          className="absolute left-0 w-[80px] h-full bg-mediumGreen flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
+                          onClick={(e) => handleWhatsAppClick(product, e)}
+                        >
+                          <div className="flex flex-col items-center justify-center text-white text-xs font-medium">
+                            <ShoppingCart className="h-5 w-5 mb-1" />
+                            <span>Comprar</span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex-1 p-3 flex flex-col justify-center">
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-sm font-bold text-gray-900 line-clamp-1">{product.name}</h3>
+                            
+                            {/* Ícones dos animais */}
+                            <div className="flex -space-x-1">
+                              {getAnimalTypes(product).map((type, index) => (
+                                <div 
+                                  key={index} 
+                                  className={`relative w-5 h-5 rounded-full overflow-hidden border border-white ${
+                                    index > 0 ? 'ml-[-4px]' : ''
+                                  }`}
+                                  style={{
+                                    zIndex: getAnimalTypes(product).length - index,
+                                    position: 'relative'
+                                  }}
+                                >
+                                  <Image 
+                                    src={getAnimalTypeImagePath(type)} 
+                                    alt={getAnimalTypeInPortuguese(type)} 
+                                    fill 
+                                    className="object-cover"
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-xs text-gray-500 line-clamp-2 mt-1">{product.description}</p>
+                        </div>
+                        
+                        <div className="min-w-[100px] p-2 flex flex-col items-end justify-center">
+                          <div className="flex items-center mb-1">
+                            <Tag className="h-3 w-3 mr-1 text-mediumGreen" />
+                            <span className="text-sm font-bold text-gray-900">R${product.pricePerSack.toFixed(2)}</span>
+                          </div>
+                          <span className="text-xs text-gray-500">Saca de {product.sackWeight}kg</span>
+                          <span className="text-xs font-medium text-mediumGreen mt-1">
+                            R${(product.pricePerSack / product.sackWeight).toFixed(2)}/kg
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
           </div>

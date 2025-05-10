@@ -108,49 +108,49 @@ export function AdminProductList({ products, onEdit, onDelete, onToggleAnimalNam
   }
 
   return (
-    <div className="bg-white rounded-lg shadow w-full max-h-[calc(100vh-200px)] overflow-auto">
+    <div className="w-full overflow-x-auto">
       <Table>
         <TableHeader className="sticky top-0 bg-white z-10">
           <TableRow>
-            <TableHead className="w-[80px]">Imagem</TableHead>
-            <TableHead className="w-[180px]">Nome</TableHead>
-            <TableHead className="w-[150px]">Tipo</TableHead>
-            <TableHead className="w-[200px]">Subtipo</TableHead>
-            <TableHead className="w-[100px]">Preço/kg</TableHead>
-            <TableHead className="w-[120px]">Saca</TableHead>
-            <TableHead className="w-[150px]">Mostrar Animal</TableHead>
-            <TableHead className="w-[100px] text-right">Ações</TableHead>
+            <TableHead className="w-[60px] text-sm">Imagem</TableHead>
+            <TableHead className="max-w-[140px] text-sm">Nome</TableHead>
+            <TableHead className="max-w-[110px] text-sm">Tipo</TableHead>
+            <TableHead className="max-w-[140px] text-sm">Subtipo</TableHead>
+            <TableHead className="w-[90px] text-sm">Preço/kg</TableHead>
+            <TableHead className="w-[100px] text-sm">Saca</TableHead>
+            <TableHead className="w-[90px] text-sm">Mostrar Animal</TableHead>
+            <TableHead className="w-[80px] text-sm text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {products.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+              <TableCell colSpan={8} className="text-center py-8 text-gray-500 text-sm">
                 Nenhum produto encontrado. Adicione seu primeiro produto!
               </TableCell>
             </TableRow>
           ) : (
             products.map((product) => (
-              <TableRow key={product.id}>
+              <TableRow key={product.id} className="text-sm">
                 <TableCell>
-                  <div className="relative w-16 h-16 rounded overflow-hidden">
+                  <div className="relative w-20 h-20 rounded overflow-hidden">
                     <Image src={product.image || "/placeholder.svg"} alt={product.name} fill className="object-cover" />
                   </div>
                 </TableCell>
-                <TableCell className="font-medium">
-                  <div className="truncate">{product.name}</div>
+                <TableCell className="font-medium text-sm max-w-[140px] truncate" title={product.name}>
+                  {product.name.length > 20 ? product.name.slice(0, 20) + '...' : product.name}
                 </TableCell>
-                <TableCell>
-                  <div className="truncate">{getAnimalTypeInPortuguese(product.animalType)}</div>
+                <TableCell className="text-sm max-w-[110px] truncate" title={getAnimalTypeInPortuguese(product.animalType)}>
+                  {getAnimalTypeInPortuguese(product.animalType).length > 20 ? getAnimalTypeInPortuguese(product.animalType).slice(0, 20) + '...' : getAnimalTypeInPortuguese(product.animalType)}
                 </TableCell>
-                <TableCell>
-                  <div className="truncate max-w-[180px]">{getSubTypeInPortuguese(product.animalType, product.subType ?? null)}</div>
+                <TableCell className="text-sm max-w-[140px] truncate" title={getSubTypeInPortuguese(product.animalType, product.subType ?? null)}>
+                  {getSubTypeInPortuguese(product.animalType, product.subType ?? null).length > 20 ? getSubTypeInPortuguese(product.animalType, product.subType ?? null).slice(0, 20) + '...' : getSubTypeInPortuguese(product.animalType, product.subType ?? null)}
                 </TableCell>
-                <TableCell>R${product.pricePerKg.toFixed(2)}</TableCell>
-                <TableCell>
+                <TableCell className="text-sm">R${product.pricePerKg.toFixed(2)}</TableCell>
+                <TableCell className="text-sm">
                   <div className="whitespace-nowrap">{product.sackWeight}kg - R${product.pricePerSack.toFixed(2)}</div>
                 </TableCell>
-                <TableCell>
+                <TableCell className="text-sm">
                   <div className="flex items-center space-x-2">
                     <Switch 
                       checked={product.showAnimalNames === true}
@@ -164,7 +164,7 @@ export function AdminProductList({ products, onEdit, onDelete, onToggleAnimalNam
                     </span>
                   </div>
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right text-sm">
                   <div className="flex justify-end gap-2">
                     <Button variant="outline" size="icon" onClick={() => onEdit(product)} className="h-8 w-8">
                       <Edit className="h-4 w-4" />

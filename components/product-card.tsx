@@ -165,6 +165,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <div 
+      id={`product-${product.id}`}
       ref={cardRef}
       className="group overflow-hidden hover:shadow-xl transition-all duration-300 h-full flex flex-col rounded-xl perspective-1000"
       onMouseMove={handleMouseMove}

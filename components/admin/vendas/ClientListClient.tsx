@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Client } from '@/lib/clients';
+import { Trash2 } from 'lucide-react';
 
 interface ClientListClientProps {
   className?: string;
@@ -34,6 +35,18 @@ export default function ClientListClient({ className, searchTerm = '' }: ClientL
     loadClients();
   }, []);
 
+  const handleDelete = async (clientId: string) => {
+    if (confirm('Tem certeza que deseja excluir este cliente?')) {
+      try {
+        const response = await fetch(`/api/clients/${clientId}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error('Erro ao excluir cliente');
+        setClients((prev) => prev.filter((c) => c.id !== clientId));
+      } catch (err) {
+        alert('Erro ao excluir cliente.');
+      }
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="animate-pulse space-y-3">
@@ -56,7 +69,14 @@ export default function ClientListClient({ className, searchTerm = '' }: ClientL
           {clients
             .filter(client => client.name.toLowerCase().includes(searchTerm.toLowerCase()))
             .map((client) => (
-              <li key={client.id} className="p-3 border rounded-md hover:bg-cream/30 border-gray-200">
+              <li key={client.id} className="p-3 border rounded-md hover:bg-cream/30 border-gray-200 relative">
+                <button
+                  className="absolute top-2 right-2 p-1 rounded hover:bg-red-100 text-gray-400 hover:text-red-600 transition-colors"
+                  title="Excluir cliente"
+                  onClick={() => handleDelete(client.id)}
+                >
+                  <Trash2 className="h-5 w-5" />
+                </button>
                 <p className="font-medium text-darkGreen">{client.name}</p>
                 {client.email && <p className="text-sm text-gray-600">Email: {client.email}</p>}
                 {client.phone && <p className="text-sm text-gray-600">Telefone: {client.phone}</p>}
